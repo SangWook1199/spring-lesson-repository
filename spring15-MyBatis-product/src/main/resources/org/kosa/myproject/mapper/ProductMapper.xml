@@ -5,23 +5,23 @@
 		product_id, product_name,maker,price,created_at
 	</sql>	
 	<select id="getTotalProductCount" resultType="int">
-	select count(*) from spring_product
+		select count(*) from spring_product
 	</select>
 	<select id="findAllProductList" resultType="org.kosa.myproject.domain.Product">
-	select <include refid="productColumns" /> 
-	from spring_product
+		select <include refid="productColumns" /> 
+		from spring_product
 	</select>
 	<select id="findProductById" parameterType="Long">
-	select <include refid="productColumns"></include>
-	from spring_product
-	where product_id=#{productId}
+		select <include refid="productColumns"></include>
+		from spring_product
+		where product_id=#{productId}
 	</select>
 	<update id="updateProduct" parameterType="org.kosa.myproject.domain.Product">
-	update spring_product
-	set product_name = #{productName},
-	maker = #{maker},
-	price = #{price}
-	where product_id=#{productId}
+		update spring_product
+		set product_name = #{productName},
+		maker = #{maker},
+		price = #{price}
+		where product_id=#{productId}
 	</update>
 	<!-- 
 				useGeneratedKeys="true"  데이터베이스에서 자동 생성된 키를 사용하도록 설정 
@@ -38,8 +38,50 @@
 		where price between #{minPrice}  and #{maxPrice}
 	</select>
 	<!-- 
-				다음주에 계속 
+				MyBatis Dynamic SQL Study
+				
+				parameterType: 타입 추론하여 생략 가능 (map,vo / dto / domin / String 등 생략 가능)
+				               만약 컬렉션 계열은 타입 명시하는 것도 좋다
+				
+				searchKeyword1.put("maker", "삼성");
 	 -->
+	<select id="findProductsDynamic" resultType="org.kosa.myproject.domain.Product">
+		select <include refid="productColumns"></include>
+		from spring_product 
+		<where>
+			<if test="maker != null and maker != ''">
+		 		AND maker = #{maker}		
+			</if>
+			<if test="productName != null and productName != ''">
+		 		AND product_name LIKE CONCAT('%',#{productName},'%') 		
+			</if>
+			<if test="minPrice !=null and minPrice != '' and maxPrice !=null and maxPrice != ''">
+				AND price BETWEEN #{minPrice} AND #{maxPrice}
+			</if>		
+			<if test="searchPrice !=null and searchPrice != ''">
+				<![CDATA[ 
+					AND price <= #{searchPrice} 
+				]]>
+			</if>
+			
+		</where>
+		ORDER BY created_at DESC
+	</select>
+	<update id="updateProductDynamic">
+		update spring_product
+		<set>
+			<if test="maker != null and maker != ''">
+				maker = #{maker},
+			</if>
+			<if test="productName != null and productName != ''">
+				product_name = #{productName},
+			</if>
+			<if test="price !=null and price != ''">
+				price = #{price},
+			</if>
+		</set>
+		WHERE product_id = #{productId}
+	</update>
 </mapper>
 
 
